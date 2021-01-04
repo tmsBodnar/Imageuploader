@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Image uploader</string>
+    <string name="header">Pedicure.hu képkezelő</string>
+    <string name="gallery">Galéria</string>
+    <string name="new_image">Új kép hozzáadása</string>
+    <string name="pic">Kép</string>
+</resources>
