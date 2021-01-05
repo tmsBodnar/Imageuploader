@@ -22,10 +22,10 @@ import org.apache.commons.net.ftp.FTPFile
 
 class MainActivity : AppCompatActivity() {
 
-    private val server = "ftp.szepiro.hu"
-    private val user = "admin@szepiro.hu"
-    private val pass = "EaBhmedun12"
-    private val folder = "/pedicure_hu/assets/images/gallery"
+    private val server = "ftp.aaa.hu"
+    private val user = "bbb@ccc.hu"
+    private val pass = "ddd"
+    private val folder = "/eee"
 
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var recView: RecyclerView
