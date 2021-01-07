@@ -4,9 +4,7 @@ import kotlinx.serialization.*
 
 @Serializable
 data class Image(
-    var source: String,
-    var alt: String,
-    var title : String
-) {
-    constructor() : this("","","")
-}
+    var source: String = "",
+    var alt: String = "",
+    var title : String = ""
+)

@@ -1,31 +1,32 @@
 package hu.pedicure.image_uploader
 
-import android.content.DialogInterface
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.module.kotlin.*
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.squareup.picasso.Picasso
+import kotlinx.coroutines.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPReply
-import java.nio.charset.Charset
-import com.fasterxml.jackson.module.kotlin.*
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.coroutines.*
-import kotlinx.serialization.encodeToString
 import org.json.JSONArray
-import kotlinx.serialization.json.Json
 import java.io.*
+import java.net.URI
+import java.nio.charset.Charset
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,15 +40,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fab: FloatingActionButton
     private lateinit var etTitle: EditText
     private lateinit var etAlt : EditText
+    private lateinit var dialogImg: ImageView
+    private lateinit var imgName: EditText
 
     private lateinit var imageList: MutableList<Image>
     private lateinit var  imageAdapter: ImageAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
-    private lateinit var job1: Job
     private lateinit var mapper: JsonMapper
+    private var photoSelect = 1
+    private lateinit var selectedPhotoUri: Uri
 
     private val isUpdate = "update"
     private val isDelete = "delete"
+    private val isNew = "new"
+    private val preSourceText = "/assets/images/gallery/"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,12 +72,10 @@ class MainActivity : AppCompatActivity() {
         recView.layoutManager = linearLayoutManager
         imageList = mutableListOf(Image())
         imageAdapter = ImageAdapter(imageList)
-        imageAdapter.onItemClickDelete = {
-            image ->
+        imageAdapter.onItemClickDelete = { image ->
             deleteImage(image)
         }
-        imageAdapter.onItemClickEdit = {
-            image ->
+        imageAdapter.onItemClickEdit = { image ->
             editImage(image)
         }
         recView.adapter = imageAdapter
@@ -83,98 +87,159 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun addNewImage(view: View) {
-      //  createUpdateDialog(null)
+        val photoPickerIntent = Intent(Intent.ACTION_PICK)
+        photoPickerIntent.type = "image/*"
+        startActivityForResult(photoPickerIntent, photoSelect)
     }
 
     private fun editImage(image: Image) {
-        createUpdateDialog(image)
-
-    }
-
-    private fun createUpdateDialog(image: Image) {
-        var dialogBuilder = AlertDialog.Builder(this)
-        var dialog = layoutInflater.inflate(R.layout.custom_dialog, null)
-        dialogBuilder.setView(dialog)
-        etTitle = dialog.findViewById(R.id.et_title)
-        etAlt = dialog.findViewById(R.id.et_alt)
-        etTitle.setText(image.title,TextView.BufferType.EDITABLE)
-        etAlt.setText(image.alt,TextView.BufferType.EDITABLE)
-        dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
-            updateOrDeleteImage(isUpdate, image)
-
-        }
-        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
-            Log.d("xxx", "cancelled")
-
-        }
-        dialogBuilder.show()
-    }
-
-    private fun updateOrDeleteImage(type: String, image: Image) {
-        imageList.remove(image)
-        when (type){
-            "update" -> {
-                Log.d("xxx", "update")
-                image.alt = etAlt.text.toString()
-                image.title = etTitle.text.toString()
-                imageList.add(0, image)
-                val updatedJson = Json.encodeToString(imageList)
-                val localFile: File = File( filesDir.path + "/images.json")
-                localFile.writeText(updatedJson)
-                val job = GlobalScope.launch {
-                    withContext(Dispatchers.Default) {
-                        val client : FTPClient = getFtpClient()
-                        client.storeFile("$folder/images.json", openFileInput(filesDir.path + "/images.json"))
-                    }
-
-                }
-                runBlocking {
-                    job.join()
-                }
-                loadImages()
-            }
-            "delete" -> {
-                Log.d("xxx", "delete")
-                val updatedJson = JSONArray(imageList)
-                val localFile: File = File( filesDir.path + "/images.json")
-                localFile.writeText(updatedJson.toString())
-                val client : FTPClient = getFtpClient()
-                client.storeFile("$folder/images.json", openFileInput(filesDir.path + "/images.json"))
-                client.deleteFile(folder + "/" +image.source)
-            }
-        }
+        createUpdateDialog(image, isUpdate)
     }
 
     private fun deleteImage(image: Image) {
-
         var dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(R.string.delete )
+        dialogBuilder.setTitle(R.string.delete)
         dialogBuilder.setMessage(R.string.confirm)
         dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
             updateOrDeleteImage(isDelete, image)
         }
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
             Log.d("xxx", "cancelled")
-
         }
         dialogBuilder.show()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            photoSelect -> {
+                if (data != null) {
+                    selectedPhotoUri = data.data!!
+                    var image = Image()
+                    createUpdateDialog(image, isNew)
+                }
+            }
+        }
+    }
+
+    private fun createUpdateDialog(image: Image, type: String) {
+        var dialogBuilder = AlertDialog.Builder(this)
+        var dialog = layoutInflater.inflate(R.layout.custom_dialog, null)
+        dialogBuilder.setView(dialog)
+        imgName = dialog.findViewById(R.id.et_name)
+        etTitle = dialog.findViewById(R.id.et_title)
+        etAlt = dialog.findViewById(R.id.et_alt)
+        dialogImg = dialog.findViewById(R.id.dialog_img)
+        when (type ) {
+            isUpdate -> {
+                Picasso.get().load("http://pedicure.hu" + image.source).into(dialogImg)
+                imgName.setText(
+                    image.source.replace(preSourceText, ""),
+                    TextView.BufferType.EDITABLE
+                )
+                if (image.title.isNotEmpty()) etTitle.setText(image.title, TextView.BufferType.EDITABLE)
+                if (image.alt.isNotEmpty()) etAlt.setText(image.alt, TextView.BufferType.EDITABLE)
+            }
+            isNew -> {
+                Picasso.get().load(selectedPhotoUri)
+                imgName.focusable = View.FOCUSABLE
+                imgName.setText(R.string.name)
+            }
+        }
+        dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
+            updateOrDeleteImage(type, image)
+        }
+        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
+            Log.d("xxx", "cancelled")
+        }
+        dialogBuilder.show()
+    }
+
+    private fun updateOrDeleteImage(type: String, image: Image) {
+        imageList.remove(image)
+        var done: Boolean = false
+        when (type){
+            "update" -> {
+                Log.d("xxx", "update")
+                image.alt = etAlt.text.toString()
+                image.title = etTitle.text.toString()
+                image.source = preSourceText + imgName.text.toString()
+                imageList.add(0, image)
+                val updatedJson = Json.encodeToString(imageList)
+                val localFile: File = File(filesDir.path + "/images.json")
+                localFile.writeText(updatedJson)
+                val job = GlobalScope.launch {
+                    done = withContext(Dispatchers.Default) { saveOrUpdateFtp(type, image) }
+                }
+                runBlocking {
+                    job.join()
+                }
+                if (done) {
+                    loadImages()
+                } else {
+                    Toast.makeText(this, "FTP hiba", Toast.LENGTH_SHORT)
+                }
+            }
+            "delete" -> {
+                Log.d("xxx", "delete")
+                val updatedJson = JSONArray(imageList)
+                val localFile: File = File(filesDir.path + "/images.json")
+                localFile.writeText(updatedJson.toString())
+                val job = GlobalScope.launch {
+                    done = withContext(Dispatchers.Default) { deleteFromFtp(image) }
+                }
+                runBlocking {
+                    job.join()
+                }
+                if (done) {
+                    loadImages()
+                } else {
+                    Toast.makeText(this, "FTP hiba", Toast.LENGTH_SHORT)
+                }
+            }
+        }
+    }
+
+    private fun saveOrUpdateFtp(type: String, image: Image): Boolean {
+        val client : FTPClient = getFtpClient()
+        val inputStream = FileInputStream(filesDir.path + "/images.json")
+        var res =  client.storeFile("$folder/images.json", inputStream)
+        inputStream.close()
+        if (type == isNew) {
+            val imageInputStream = contentResolver.openInputStream(selectedPhotoUri)
+            res = client.storeFile(folder + image.source, imageInputStream)
+        }
+        return res
+    }
+    private fun deleteFromFtp(image: Image): Boolean {
+        val client : FTPClient = getFtpClient()
+        val inputStream = FileInputStream(filesDir.path + "/images.json")
+        client.storeFile("$folder/images.json", inputStream)
+        val res = client.deleteFile(folder + "/" + image.source)
+        return res
+    }
+
     private fun initProperties() {
         val resources = this.resources
-        val inputStream: InputStream = resources.openRawResource(resources.getIdentifier("config_properties", "raw", packageName))
+        val inputStream: InputStream = resources.openRawResource(
+            resources.getIdentifier(
+                "config_properties",
+                "raw",
+                packageName
+            )
+        )
         val prop = Properties()
         prop.load(inputStream)
         server = prop.getProperty("server")
+        folder = prop.getProperty("folder")
         user = prop.getProperty("user")
         pass = prop.getProperty("pwd")
-        folder = prop.getProperty("folder")
 
     }
 
     private fun loadImages() {
         lateinit var jsonFile: File
-        job1 = GlobalScope.launch {
+        val job1 = GlobalScope.launch {
                 jsonFile = withContext(Dispatchers.Default) { getFTPFile() }
         }
         runBlocking {
@@ -190,24 +255,16 @@ class MainActivity : AppCompatActivity() {
     private fun getFTPFile(): File {
        val client : FTPClient = getFtpClient()
 
-        val localFile: File = File( filesDir.path + "/images.json")
+        val localFile: File = File(filesDir.path + "/images.json")
         if(!localFile.exists()){
             localFile.createNewFile();
         }
-        val ftpFiles = client.listFiles(folder).toList()
-        if (ftpFiles != null && ftpFiles.isNotEmpty()) {
-            for (file in ftpFiles) {
-                if (file.isFile && file.name.endsWith(".json", true)) {
-                    var remoteFile = folder + "/" + file.name
-                    var outputStream1: OutputStream = BufferedOutputStream(FileOutputStream(localFile));
-                    var success = client.retrieveFile(remoteFile, outputStream1);
-
-                    if (success) {
-                        outputStream1.close();
-                        client.disconnect()
-                    }
-                }
-            }
+        var remoteFilePath = "$folder/images.json"
+        var outputStream: OutputStream = BufferedOutputStream(FileOutputStream(localFile));
+        var success = client.retrieveFile(remoteFilePath, outputStream);
+        if (success) {
+             outputStream.close();
+             client.disconnect()
         }
         return localFile
     }

@@ -11,4 +11,5 @@
     <string name="OK">OK</string>
     <string name="cancel">Vissza</string>
     <string name="confirm">Biztosan törlöd?</string>
+    <string name="name">Kép neve</string>
 </resources>
