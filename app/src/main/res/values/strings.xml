@@ -4,4 +4,11 @@
     <string name="gallery">Galéria</string>
     <string name="new_image">Új kép hozzáadása</string>
     <string name="pic">Kép</string>
+    <string name="edit">Szerkesztés</string>
+    <string name="delete">Törlés</string>
+    <string name="title">Kép címe</string>
+    <string name="alt">Kép leírása</string>
+    <string name="OK">OK</string>
+    <string name="cancel">Vissza</string>
+    <string name="confirm">Biztosan törlöd?</string>
 </resources>

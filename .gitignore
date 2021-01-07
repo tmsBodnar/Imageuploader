@@ -82,4 +82,6 @@ lint/intermediates/
 lint/generated/
 lint/outputs/
 lint/tmp/
-# lint/reports/
+# properties
+/app/src/main/res/raw/config_properties
+/app/src/main/res/xml/config_properties

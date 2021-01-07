@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="135dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="10dp"
     >
@@ -18,37 +18,46 @@
     <TextView
         android:id="@+id/title"
         android:layout_width="0dp"
-        android:layout_height="28dp"
+        android:layout_height="40dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toRightOf="@id/pic"
         app:layout_constraintRight_toRightOf="parent"
-        android:backgroundTint="@color/cardview_dark_background"/>
+        android:textAlignment="center"
+        android:textSize="14sp"/>
     <TextView
         android:id="@+id/alt"
-        android:layout_height="72dp"
+        android:layout_height="50dp"
         app:layout_constraintTop_toBottomOf="@id/title"
         app:layout_constraintLeft_toRightOf="@id/pic"
-        app:layout_constraintRight_toLeftOf="@+id/lin_layout"
-        android:layout_width="0dp"
-        android:backgroundTint="@color/design_default_color_primary_dark"/>
-    <LinearLayout
-        android:id="@+id/lin_layout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title"
-        android:orientation="vertical"
-        >
-        <ImageView
+        android:layout_width="0dp"
+        android:textSize="12sp"
+        android:textAlignment="center"/>
+    <Button
+        android:id="@+id/edit_btn"
+        android:layout_width="0dp"
+        android:layout_height="45dp"
 
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:src="@android:drawable/ic_delete"
-            />
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:src="@android:drawable/ic_menu_edit"/>
-    </LinearLayout>
+        app:layout_constraintWidth_percent="0.45"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/alt"
+        app:layout_constraintLeft_toRightOf="@id/delete_btn"
+        android:text="@string/edit"
+        android:onClick="edit"/>
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        android:id="@+id/delete_btn"
+        android:onClick="delete"
+        android:text="@string/delete"
+        app:layout_constraintWidth_percent="0.45"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/alt" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

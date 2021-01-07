@@ -3,27 +3,35 @@ package hu.pedicure.image_uploader
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.squareup.picasso.Picasso
 import hu.pedicure.image_uploader.ImageAdapter.*
+import java.lang.ref.WeakReference
 
 class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>(){
 
-    var picasso = Picasso.get()
+    private var picasso: Picasso = Picasso.get()
+    var onItemClickDelete: ((Image) -> Unit)? = null
+    var onItemClickEdit: ((Image) -> Unit)? = null
 
-    class ViewHolder(view: View): RecyclerView.ViewHolder(view){
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view){
+
         val domain: String = "http://pedicure.hu"
-        val alt: TextView
-        val title: TextView
-        val pic: ImageView
+        val alt: TextView = view.findViewById(R.id.alt)
+        val title: TextView = view.findViewById(R.id.title)
+        val pic: ImageView = view.findViewById(R.id.pic)
+        private val editButton: Button = view.findViewById(R.id.edit_btn)
+        private val deleteButton : Button = view.findViewById(R.id.delete_btn)
+
         init {
-            alt = view.findViewById(R.id.alt)
-            title = view.findViewById(R.id.title)
-            pic = view.findViewById(R.id.pic)
+            editButton.setOnClickListener { onItemClickEdit?.invoke(dataSet[adapterPosition])}
+            deleteButton.setOnClickListener { onItemClickDelete?.invoke(dataSet[adapterPosition])}
         }
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -37,9 +45,9 @@ class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-       holder.alt.text = dataSet[position].alt
+        holder.alt.text = dataSet[position].alt
         holder.title.text = dataSet[position].title
-        Picasso.get().load(holder.domain + dataSet[position].source).placeholder(R.drawable.logo).into(holder.pic)
+        picasso.load(holder.domain + dataSet[position].source).placeholder(R.drawable.logo).into(holder.pic)
     }
 
 }
