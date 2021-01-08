@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.webkit.MimeTypeMap
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -139,11 +140,11 @@ class MainActivity : AppCompatActivity() {
                 )
                 if (image.title.isNotEmpty()) etTitle.setText(image.title, TextView.BufferType.EDITABLE)
                 if (image.alt.isNotEmpty()) etAlt.setText(image.alt, TextView.BufferType.EDITABLE)
+                imgName.focusable = View.NOT_FOCUSABLE
             }
             isNew -> {
-                Picasso.get().load(selectedPhotoUri)
+                Picasso.get().load(selectedPhotoUri).into(dialogImg)
                 imgName.focusable = View.FOCUSABLE
-                imgName.setText(R.string.name)
             }
         }
         dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
@@ -159,11 +160,17 @@ class MainActivity : AppCompatActivity() {
         imageList.remove(image)
         var done: Boolean = false
         when (type){
-            "update" -> {
+            "update", "new" -> {
                 Log.d("xxx", "update")
                 image.alt = etAlt.text.toString()
                 image.title = etTitle.text.toString()
-                image.source = preSourceText + imgName.text.toString()
+                var mime = MimeTypeMap.getSingleton()
+                if (type == "new") {
+                    var ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
+                    var lastItemSource = imageList.get(imageList.size - 1).source
+                    var count = lastItemSource.substring(lastItemSource.lastIndexOf("/") + 1, lastItemSource.indexOf("_")).toInt() +1
+                    image.source = preSourceText + count + "_" + imgName.text.toString() + "." + ext
+                }
                 imageList.add(0, image)
                 val updatedJson = Json.encodeToString(imageList)
                 val localFile: File = File(filesDir.path + "/images.json")
@@ -182,9 +189,9 @@ class MainActivity : AppCompatActivity() {
             }
             "delete" -> {
                 Log.d("xxx", "delete")
-                val updatedJson = JSONArray(imageList)
+                val updatedJson = Json.encodeToString(imageList)
                 val localFile: File = File(filesDir.path + "/images.json")
-                localFile.writeText(updatedJson.toString())
+                localFile.writeText(updatedJson)
                 val job = GlobalScope.launch {
                     done = withContext(Dispatchers.Default) { deleteFromFtp(image) }
                 }
@@ -207,7 +214,8 @@ class MainActivity : AppCompatActivity() {
         inputStream.close()
         if (type == isNew) {
             val imageInputStream = contentResolver.openInputStream(selectedPhotoUri)
-            res = client.storeFile(folder + image.source, imageInputStream)
+            res = client.storeFile("pedicure_hu" + image.source, imageInputStream)
+            imageInputStream?.close()
         }
         return res
     }
@@ -215,7 +223,7 @@ class MainActivity : AppCompatActivity() {
         val client : FTPClient = getFtpClient()
         val inputStream = FileInputStream(filesDir.path + "/images.json")
         client.storeFile("$folder/images.json", inputStream)
-        val res = client.deleteFile(folder + "/" + image.source)
+        val res = client.deleteFile("pedicure_hu" + image.source)
         return res
     }
 

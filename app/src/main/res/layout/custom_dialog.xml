@@ -26,8 +26,7 @@
         android:layout_margin="15dp"
         android:hint="@string/name"
         android:importantForAutofill="no"
-        android:lines="2"
-        android:focusable="false"/>
+        android:lines="2" />
 
     <EditText
         android:id="@+id/et_title"
