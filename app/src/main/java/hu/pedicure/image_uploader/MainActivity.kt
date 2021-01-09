@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
                     var count = lastItemSource.substring(lastItemSource.lastIndexOf("/") + 1, lastItemSource.indexOf("_")).toInt() +1
                     image.source = preSourceText + count + "_" + imgName.text.toString() + "." + ext
                 }
-                imageList.add(0, image)
+                imageList.add(image)
                 val updatedJson = Json.encodeToString(imageList)
                 val localFile: File = File(filesDir.path + "/images.json")
                 localFile.writeText(updatedJson)
@@ -255,6 +255,7 @@ class MainActivity : AppCompatActivity() {
         }
         imageList.clear()
         imageList.addAll(parseListFromJson(jsonFile))
+        imageList.reverse()
         imageAdapter.notifyDataSetChanged()
         pBar.visibility = View.INVISIBLE
         fab.visibility = View.VISIBLE
