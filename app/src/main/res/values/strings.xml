@@ -12,4 +12,5 @@
     <string name="cancel">Vissza</string>
     <string name="confirm">Biztosan törlöd?</string>
     <string name="name">Kép neve</string>
+    <string name="loading">Betöltés</string>
 </resources>

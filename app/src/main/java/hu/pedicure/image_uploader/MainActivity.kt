@@ -1,6 +1,7 @@
 package hu.pedicure.image_uploader
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.webkit.MimeTypeMap
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.scale
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.fasterxml.jackson.databind.json.JsonMapper
@@ -22,9 +24,7 @@ import kotlinx.serialization.json.Json
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPReply
-import org.json.JSONArray
 import java.io.*
-import java.net.URI
 import java.nio.charset.Charset
 import java.util.*
 
@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etAlt : EditText
     private lateinit var dialogImg: ImageView
     private lateinit var imgName: EditText
+    private lateinit var  loadButton: Button
 
     private lateinit var imageList: MutableList<Image>
     private lateinit var  imageAdapter: ImageAdapter
@@ -63,11 +64,10 @@ class MainActivity : AppCompatActivity() {
         recView = findViewById(R.id.rec_view)
         pBar = findViewById(R.id.progress_circular)
         fab = findViewById(R.id.fab)
+        loadButton = findViewById(R.id.btn_load)
 
         mapper = JsonMapper()
         mapper.registerKotlinModule()
-
-        fab.visibility = View.INVISIBLE
 
         linearLayoutManager = LinearLayoutManager(this)
         recView.layoutManager = linearLayoutManager
@@ -80,11 +80,19 @@ class MainActivity : AppCompatActivity() {
             editImage(image)
         }
         recView.adapter = imageAdapter
-
+        recView.visibility = View.GONE
+        fab.visibility = View.GONE
+        loadButton.visibility = View.VISIBLE
+        Log.d("xxx", "init")
         initProperties()
+    }
 
+
+    fun start(view: View) {
+        loadButton.visibility = View.GONE
         loadImages()
-
+        recView.visibility = View.VISIBLE
+        fab.visibility = View.VISIBLE
     }
 
     fun addNewImage(view: View) {
@@ -104,8 +112,8 @@ class MainActivity : AppCompatActivity() {
         dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
             updateOrDeleteImage(isDelete, image)
         }
-        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
-            Log.d("xxx", "cancelled")
+        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which->
+
         }
         dialogBuilder.show()
     }
@@ -116,6 +124,25 @@ class MainActivity : AppCompatActivity() {
             photoSelect -> {
                 if (data != null) {
                     selectedPhotoUri = data.data!!
+                    var imageStream: InputStream? = null
+                    try {
+                        imageStream = contentResolver.openInputStream(
+                                selectedPhotoUri)
+                    } catch (e: FileNotFoundException) {
+                        e.printStackTrace()
+                    }
+
+                    val bmp = BitmapFactory.decodeStream(imageStream)
+
+                    var stream: ByteArrayOutputStream? = ByteArrayOutputStream()
+                    bmp.scale(1184, 666)
+                    val byteArray = stream!!.toByteArray()
+                    try {
+                        stream!!.close()
+                        stream = null
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
                     var image = Image()
                     createUpdateDialog(image, isNew)
                 }
@@ -135,8 +162,8 @@ class MainActivity : AppCompatActivity() {
             isUpdate -> {
                 Picasso.get().load("http://pedicure.hu" + image.source).into(dialogImg)
                 imgName.setText(
-                    image.source.replace(preSourceText, ""),
-                    TextView.BufferType.EDITABLE
+                        image.source.replace(preSourceText, ""),
+                        TextView.BufferType.EDITABLE
                 )
                 if (image.title.isNotEmpty()) etTitle.setText(image.title, TextView.BufferType.EDITABLE)
                 if (image.alt.isNotEmpty()) etAlt.setText(image.alt, TextView.BufferType.EDITABLE)
@@ -151,7 +178,7 @@ class MainActivity : AppCompatActivity() {
             updateOrDeleteImage(type, image)
         }
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
-            Log.d("xxx", "cancelled")
+
         }
         dialogBuilder.show()
     }
@@ -161,14 +188,15 @@ class MainActivity : AppCompatActivity() {
         var done: Boolean = false
         when (type){
             "update", "new" -> {
-                Log.d("xxx", "update")
+
                 image.alt = etAlt.text.toString()
                 image.title = etTitle.text.toString()
+                image.seq = imageList.size + 1
                 var mime = MimeTypeMap.getSingleton()
                 if (type == "new") {
                     var ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
-                    var lastItemSource = imageList.get(imageList.size - 1).source
-                    var count = lastItemSource.substring(lastItemSource.lastIndexOf("/") + 1, lastItemSource.indexOf("_")).toInt() +1
+                    var lastItemSource = imageList.get(imageList.size - 1)
+                    var count = lastItemSource.seq + 1
                     image.source = preSourceText + count + "_" + imgName.text.toString() + "." + ext
                 }
                 imageList.add(image)
@@ -188,7 +216,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             "delete" -> {
-                Log.d("xxx", "delete")
+
                 val updatedJson = Json.encodeToString(imageList)
                 val localFile: File = File(filesDir.path + "/images.json")
                 localFile.writeText(updatedJson)
@@ -230,11 +258,11 @@ class MainActivity : AppCompatActivity() {
     private fun initProperties() {
         val resources = this.resources
         val inputStream: InputStream = resources.openRawResource(
-            resources.getIdentifier(
-                "config_properties",
-                "raw",
-                packageName
-            )
+                resources.getIdentifier(
+                        "config_properties",
+                        "raw",
+                        packageName
+                )
         )
         val prop = Properties()
         prop.load(inputStream)
@@ -246,9 +274,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadImages() {
+
         lateinit var jsonFile: File
-        val job1 = GlobalScope.launch {
-                jsonFile = withContext(Dispatchers.Default) { getFTPFile() }
+        val job1 = GlobalScope.launch(Dispatchers.IO) {
+
+            jsonFile = withContext(Dispatchers.IO) {
+                getFTPFile()
+            }
+
         }
         runBlocking {
             job1.join()
@@ -257,12 +290,11 @@ class MainActivity : AppCompatActivity() {
         imageList.addAll(parseListFromJson(jsonFile))
         imageList.reverse()
         imageAdapter.notifyDataSetChanged()
-        pBar.visibility = View.INVISIBLE
-        fab.visibility = View.VISIBLE
     }
 
     private fun getFTPFile(): File {
-       val client : FTPClient = getFtpClient()
+
+        val client : FTPClient = getFtpClient()
 
         val localFile: File = File(filesDir.path + "/images.json")
         if(!localFile.exists()){
@@ -297,8 +329,8 @@ class MainActivity : AppCompatActivity() {
     private fun parseListFromJson(jsonFile: File) : MutableList<Image> {
 
         var jsons =  jsonFile.readText(Charset.forName("UTF-8")).replace("\r\n", "")
-        var images: MutableList<Image> = mapper.readValue(jsons)
-        return images
+        return mapper.readValue(jsons)
     }
+
 }
 
