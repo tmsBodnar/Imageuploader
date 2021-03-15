@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.webkit.MimeTypeMap
@@ -50,7 +51,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var mapper: JsonMapper
     private var photoSelect = 1
-    private lateinit var selectedPhotoUri: Uri
+    private lateinit var resizedUri: Uri
 
     private val isUpdate = "update"
     private val isDelete = "delete"
@@ -123,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             photoSelect -> {
                 if (data != null) {
-                    selectedPhotoUri = data.data!!
+                    val selectedPhotoUri = data.data!!
                     var imageStream: InputStream? = null
                     try {
                         imageStream = contentResolver.openInputStream(
@@ -133,21 +134,22 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     val bmp = BitmapFactory.decodeStream(imageStream)
-
-                    var stream: ByteArrayOutputStream? = ByteArrayOutputStream()
                     bmp.scale(1184, 666)
-                    val byteArray = stream!!.toByteArray()
-                    try {
-                        stream!!.close()
-                        stream = null
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
+                    var stream: ByteArrayOutputStream? = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                    resizedUri = getBmpUri(bmp)
                     var image = Image()
                     createUpdateDialog(image, isNew)
                 }
             }
         }
+    }
+
+    private fun getBmpUri(bmp: Bitmap): Uri{
+        val bytes = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path: String = MediaStore.Images.Media.insertImage(contentResolver, bmp, "Title", null)
+        return Uri.parse(path)
     }
 
     private fun createUpdateDialog(image: Image, type: String) {
@@ -170,7 +172,7 @@ class MainActivity : AppCompatActivity() {
                 imgName.focusable = View.NOT_FOCUSABLE
             }
             isNew -> {
-                Picasso.get().load(selectedPhotoUri).into(dialogImg)
+                Picasso.get().load(resizedUri).into(dialogImg)
                 imgName.focusable = View.FOCUSABLE
             }
         }
@@ -194,7 +196,7 @@ class MainActivity : AppCompatActivity() {
                 image.seq = imageList.size + 1
                 var mime = MimeTypeMap.getSingleton()
                 if (type == "new") {
-                    var ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
+                    var ext = mime.getExtensionFromMimeType(contentResolver.getType(resizedUri))
                     var lastItemSource = imageList.get(imageList.size - 1)
                     var count = lastItemSource.seq + 1
                     image.source = preSourceText + count + "_" + imgName.text.toString() + "." + ext
@@ -241,7 +243,7 @@ class MainActivity : AppCompatActivity() {
         var res =  client.storeFile("$folder/images.json", inputStream)
         inputStream.close()
         if (type == isNew) {
-            val imageInputStream = contentResolver.openInputStream(selectedPhotoUri)
+            val imageInputStream = contentResolver.openInputStream(resizedUri)
             res = client.storeFile("pedicure_hu" + image.source, imageInputStream)
             imageInputStream?.close()
         }
