@@ -1,7 +1,6 @@
 package hu.pedicure.image_uploader
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -10,20 +9,19 @@ import android.webkit.MimeTypeMap
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.scale
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.squareup.picasso.Picasso
-import hu.pedicure.image_uploader.imageDetailsListHelper.ImageDetailsListHelper
 import hu.pedicure.image_uploader.ftpHelper.FTPHelper
-import hu.pedicure.image_uploader.imageAdapter.ImageAdapter
+import hu.pedicure.image_uploader.imageHelpers.ImageAdapter
+import hu.pedicure.image_uploader.imageHelpers.ImageDetailsListHelper
 import hu.pedicure.image_uploader.model.Image
 import hu.pedicure.image_uploader.model.Type
 import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.*
+import java.io.File
 
 
 class MainActivity : AppCompatActivity() {

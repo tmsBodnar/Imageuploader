@@ -2,6 +2,7 @@ package hu.pedicure.image_uploader.ftpHelper
 
 import android.content.Context
 import android.net.Uri
+import hu.pedicure.image_uploader.imageHelpers.ImageFormatterToWeb
 import hu.pedicure.image_uploader.model.Image
 import hu.pedicure.image_uploader.model.Type
 import hu.pedicure.image_uploader.propertiesHelper.PropertiesHelper
@@ -14,6 +15,7 @@ import java.io.*
 class FTPHelper(private var ctx: Context) {
 
     private var propHelper: PropertiesHelper
+    private var imageFormatter = ImageFormatterToWeb()
     private var client: FTPClient
     private var folder: String
     private var server: String
@@ -26,6 +28,7 @@ class FTPHelper(private var ctx: Context) {
     init {
         this.client = FTPClient()
         this.propHelper = PropertiesHelper(this.ctx)
+
         this.folder = this.propHelper.folder
         this.server = this.propHelper.server
         this.user = this.propHelper.user
@@ -38,8 +41,9 @@ class FTPHelper(private var ctx: Context) {
         val inputStream = FileInputStream(this.ctx.filesDir.path + "/images.json")
         var res =  client.storeFile("$folder/images.json", inputStream)
         inputStream.close()
+        val resizedImageUri = imageFormatter.formatImageToWeb(selectedPhotoUri, this.ctx)
         if (type == Type.NEW) {
-            val imageInputStream = ctx.contentResolver.openInputStream(selectedPhotoUri)
+            val imageInputStream = ctx.contentResolver.openInputStream(resizedImageUri)
             res = client.storeFile("pedicure_hu" + image.source, imageInputStream)
             imageInputStream?.close()
         }

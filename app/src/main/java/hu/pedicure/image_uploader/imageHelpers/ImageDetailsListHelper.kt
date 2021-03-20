@@ -1,4 +1,4 @@
-package hu.pedicure.image_uploader.imageDetailsListHelper
+package hu.pedicure.image_uploader.imageHelpers
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -7,16 +7,16 @@ import hu.pedicure.image_uploader.model.Image
 import java.io.File
 import java.nio.charset.Charset
 
-class ImageDetailsListHelper {
+class ImageDetailsListHelper() {
 
     private var mapper: JsonMapper = JsonMapper()
 
-    constructor(){
+    init {
         mapper.registerKotlinModule()
     }
 
     fun loadImages(jsonFile: File): Collection<Image> {
-        var jsons =  jsonFile.readText(Charset.forName("UTF-8")).replace("\r\n", "")
-        return mapper.readValue(jsons)
+        val json =  jsonFile.readText(Charset.forName("UTF-8")).replace("\r\n", "")
+        return mapper.readValue(json)
     }
 }

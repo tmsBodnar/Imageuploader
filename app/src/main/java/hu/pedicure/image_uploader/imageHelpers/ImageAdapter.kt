@@ -1,6 +1,5 @@
-package hu.pedicure.image_uploader.imageAdapter
+package hu.pedicure.image_uploader.imageHelpers
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,9 +9,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.squareup.picasso.Picasso
-import hu.pedicure.image_uploader.model.Image
 import hu.pedicure.image_uploader.R
-import hu.pedicure.image_uploader.imageAdapter.ImageAdapter.*
+import hu.pedicure.image_uploader.imageHelpers.ImageAdapter.ViewHolder
+import hu.pedicure.image_uploader.model.Image
 import hu.pedicure.image_uploader.propertiesHelper.PropertiesHelper
 
 class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>(){
