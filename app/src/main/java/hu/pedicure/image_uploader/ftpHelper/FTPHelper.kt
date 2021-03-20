@@ -14,6 +14,7 @@ import java.io.*
 class FTPHelper {
 
     private var propHelper: PropertiesHelper
+    private lateinit var client: FTPClient
     private var ctx: Context
     private var folder: String
     private var server: String
@@ -24,6 +25,7 @@ class FTPHelper {
 
 
     constructor(ctx: Context){
+        this.client = FTPClient()
         this.ctx = ctx
         this.propHelper = PropertiesHelper(this.ctx)
         this.folder = this.propHelper.getFolder()
@@ -34,7 +36,7 @@ class FTPHelper {
 
 
     fun saveOrUpdateFtp(type: Type, image: Image, selectedPhotoUri: Uri): Boolean {
-        val client : FTPClient = getFtpClient()
+        this.client = getFtpClient()
         val inputStream = FileInputStream(this.ctx.filesDir.path + "/images.json")
         var res =  client.storeFile("$folder/images.json", inputStream)
         inputStream.close()
@@ -43,20 +45,25 @@ class FTPHelper {
             res = client.storeFile("pedicure_hu" + image.source, imageInputStream)
             imageInputStream?.close()
         }
+        if (res) {
+            client.disconnect()
+        }
         return res
     }
     fun deleteFromFtp(image: Image): Boolean {
-        val client : FTPClient = getFtpClient()
+        client = getFtpClient()
         val inputStream = FileInputStream(this.ctx.filesDir.path + "/images.json")
         client.storeFile("$folder/images.json", inputStream)
         val res = client.deleteFile("pedicure_hu" + image.source)
+        if (res) {
+            inputStream.close()
+            client.disconnect()
+        }
         return res
     }
 
     private fun getFTPFile(): File {
-
-        val client : FTPClient = getFtpClient()
-
+        client = getFtpClient()
         val localFile: File = File(this.ctx.filesDir.path + "/images.json")
         if(!localFile.exists()){
             localFile.createNewFile();
@@ -72,7 +79,7 @@ class FTPHelper {
     }
 
     private fun getFtpClient(): FTPClient {
-        val client = FTPClient()
+
         client.connect(server)
 
         val reply = client.replyCode

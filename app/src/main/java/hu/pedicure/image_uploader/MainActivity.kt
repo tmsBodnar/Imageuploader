@@ -180,8 +180,8 @@ class MainActivity : AppCompatActivity() {
                 var mime = MimeTypeMap.getSingleton()
                 if (type == Type.NEW) {
                     var ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
-                    var lastItemSource = imageList.get(imageList.size - 1)
-                    var count = lastItemSource.seq + 1
+                    var lastItemSource = imageList[imageList.size - 1]
+                    var count = if (lastItemSource.seq > 0)  imageList.size else lastItemSource.seq + 1
                     image.source = PRE_SOURCE_TEXT + count + "_" + imgName.text.toString() + "." + ext
                 }
                 imageList.add(image)
