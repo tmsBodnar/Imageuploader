@@ -1,5 +1,6 @@
 package hu.pedicure.image_uploader.imageAdapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import com.squareup.picasso.Picasso
 import hu.pedicure.image_uploader.model.Image
 import hu.pedicure.image_uploader.R
 import hu.pedicure.image_uploader.imageAdapter.ImageAdapter.*
+import hu.pedicure.image_uploader.propertiesHelper.PropertiesHelper
 
 class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>(){
 
@@ -20,8 +22,8 @@ class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>
     var onItemClickEdit: ((Image) -> Unit)? = null
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view){
-
-        val domain: String = "http://pedicure.hu"
+        private val propHelper = PropertiesHelper(view.context)
+        val domain: String = propHelper.domain
         val alt: TextView = view.findViewById(R.id.alt)
         val title: TextView = view.findViewById(R.id.title)
         val pic: ImageView = view.findViewById(R.id.pic)

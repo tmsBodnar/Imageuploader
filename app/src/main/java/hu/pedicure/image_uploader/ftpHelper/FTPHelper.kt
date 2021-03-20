@@ -11,11 +11,10 @@ import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPReply
 import java.io.*
 
-class FTPHelper {
+class FTPHelper(private var ctx: Context) {
 
     private var propHelper: PropertiesHelper
-    private lateinit var client: FTPClient
-    private var ctx: Context
+    private var client: FTPClient
     private var folder: String
     private var server: String
     private var user: String
@@ -24,14 +23,13 @@ class FTPHelper {
     private lateinit var jsonFile: File
 
 
-    constructor(ctx: Context){
+    init {
         this.client = FTPClient()
-        this.ctx = ctx
         this.propHelper = PropertiesHelper(this.ctx)
-        this.folder = this.propHelper.getFolder()
-        this.server = this.propHelper.getServer()
-        this.user = this.propHelper.getUser()
-        this.pass = this.propHelper.getPass()
+        this.folder = this.propHelper.folder
+        this.server = this.propHelper.server
+        this.user = this.propHelper.user
+        this.pass = this.propHelper.pass
     }
 
 
@@ -64,15 +62,15 @@ class FTPHelper {
 
     private fun getFTPFile(): File {
         client = getFtpClient()
-        val localFile: File = File(this.ctx.filesDir.path + "/images.json")
+        val localFile = File(this.ctx.filesDir.path + "/images.json")
         if(!localFile.exists()){
-            localFile.createNewFile();
+            localFile.createNewFile()
         }
-        var remoteFilePath = "$folder/images.json"
-        var outputStream: OutputStream = BufferedOutputStream(FileOutputStream(localFile));
-        var success = client.retrieveFile(remoteFilePath, outputStream);
+        val remoteFilePath = "$folder/images.json"
+        val outputStream: OutputStream = BufferedOutputStream(FileOutputStream(localFile))
+        val success = client.retrieveFile(remoteFilePath, outputStream)
         if (success) {
-            outputStream.close();
+            outputStream.close()
             client.disconnect()
         }
         return localFile
@@ -90,8 +88,8 @@ class FTPHelper {
             client.disconnect()
         }
         client.enterLocalPassiveMode()
-        client.setFileType(FTP.BINARY_FILE_TYPE);
-        return client;
+        client.setFileType(FTP.BINARY_FILE_TYPE)
+        return client
     }
 
     fun getJSONFile(): File{

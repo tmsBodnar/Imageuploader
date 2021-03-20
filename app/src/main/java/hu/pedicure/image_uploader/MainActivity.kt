@@ -72,18 +72,18 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun start(view: View) {
+    fun start() {
         loadButton.visibility = View.GONE
         loadImages()
         recView.visibility = View.VISIBLE
         fab.visibility = View.VISIBLE
     }
 
-    fun addNewImage(view: View) {
+    fun addNewImage() {
         val photoPickerIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         photoPickerIntent.type = "image/*"
-        photoPickerIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivityForResult(photoPickerIntent, Companion.PHOTO_SELECT)
+        photoPickerIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivityForResult(photoPickerIntent, PHOTO_SELECT)
     }
 
     private fun editImage(image: Image) {
@@ -91,13 +91,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun deleteImage(image: Image) {
-        var dialogBuilder = AlertDialog.Builder(this)
+        val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle(R.string.delete)
         dialogBuilder.setMessage(R.string.confirm)
-        dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
+        dialogBuilder.setPositiveButton(R.string.OK) { _,_ ->
             updateOrDeleteImage(Type.DELETE, image)
         }
-        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which->
+        dialogBuilder.setNegativeButton(R.string.cancel) { _,_->
 
         }
         dialogBuilder.show()
@@ -105,30 +105,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         when (requestCode) {
-            Companion.PHOTO_SELECT -> {
+            PHOTO_SELECT -> {
                 if (data != null) {
                     selectedPhotoUri = data.data!!
-                    var imageStream: InputStream? = null
-                    try {
-                        imageStream = contentResolver.openInputStream(
-                                selectedPhotoUri)
-                    } catch (e: FileNotFoundException) {
-                        e.printStackTrace()
-                    }
-
-                    val bmp = BitmapFactory.decodeStream(imageStream)
-                    var stream: ByteArrayOutputStream? = ByteArrayOutputStream()
-                    bmp.scale(1184, 666)
-                    val byteArray = stream!!.toByteArray()
-                    try {
-                        stream!!.close()
-                        stream = null
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
-                    var image = Image()
+                    val image = Image()
                     createUpdateDialog(image, Type.NEW)
                 }
             }
@@ -136,8 +118,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createUpdateDialog(image: Image, type: Type) {
-        var dialogBuilder = AlertDialog.Builder(this)
-        var dialog = layoutInflater.inflate(R.layout.custom_dialog, null)
+        val dialogBuilder = AlertDialog.Builder(this)
+        val dialog = layoutInflater.inflate(R.layout.custom_dialog, null)
         dialogBuilder.setView(dialog)
         imgName = dialog.findViewById(R.id.et_name)
         etTitle = dialog.findViewById(R.id.et_title)
@@ -158,11 +140,14 @@ class MainActivity : AppCompatActivity() {
                 Picasso.get().load(selectedPhotoUri).into(dialogImg)
                 imgName.focusable = View.FOCUSABLE
             }
+            else -> {
+                throw Exception("No type!")
+            }
         }
-        dialogBuilder.setPositiveButton(R.string.OK) { dialog, which ->
+        dialogBuilder.setPositiveButton(R.string.OK) { _,_ ->
             updateOrDeleteImage(type, image)
         }
-        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which->
+        dialogBuilder.setNegativeButton(R.string.cancel) { _,_->
 
         }
         dialogBuilder.show()
@@ -177,16 +162,16 @@ class MainActivity : AppCompatActivity() {
                 image.alt = etAlt.text.toString()
                 image.title = etTitle.text.toString()
                 image.seq = imageList.size + 1
-                var mime = MimeTypeMap.getSingleton()
+                val mime = MimeTypeMap.getSingleton()
                 if (type == Type.NEW) {
-                    var ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
-                    var lastItemSource = imageList[imageList.size - 1]
-                    var count = if (lastItemSource.seq > 0)  imageList.size else lastItemSource.seq + 1
+                    val ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
+                    val lastItemSource = imageList[imageList.size - 1]
+                    val count = if (lastItemSource.seq > 0)  imageList.size else lastItemSource.seq + 1
                     image.source = PRE_SOURCE_TEXT + count + "_" + imgName.text.toString() + "." + ext
                 }
                 imageList.add(image)
                 val updatedJson = Json.encodeToString(imageList)
-                val localFile: File = File(filesDir.path + "/images.json")
+                val localFile = File(filesDir.path + "/images.json")
                 localFile.writeText(updatedJson)
                 val job = GlobalScope.launch {
                     done = withContext(Dispatchers.Default) { ftpHelper.saveOrUpdateFtp(type, image, selectedPhotoUri) }
@@ -197,13 +182,13 @@ class MainActivity : AppCompatActivity() {
                 if (done) {
                     loadImages()
                 } else {
-                    Toast.makeText(this, "FTP hiba", Toast.LENGTH_SHORT)
+                    Toast.makeText(this, "FTP hiba", Toast.LENGTH_SHORT).show()
                 }
             }
             Type.DELETE -> {
 
                 val updatedJson = Json.encodeToString(imageList)
-                val localFile: File = File(filesDir.path + "/images.json")
+                val localFile = File(filesDir.path + "/images.json")
                 localFile.writeText(updatedJson)
                 val job = GlobalScope.launch {
                     done = withContext(Dispatchers.Default) { ftpHelper.deleteFromFtp(image) }
@@ -214,7 +199,7 @@ class MainActivity : AppCompatActivity() {
                 if (done) {
                     loadImages()
                 } else {
-                    Toast.makeText(this, "FTP hiba", Toast.LENGTH_SHORT)
+                    Toast.makeText(this, "FTP hiba", Toast.LENGTH_SHORT).show()
                 }
             }
         }

@@ -4,15 +4,15 @@ import android.content.Context
 import java.io.InputStream
 import java.util.*
 
-class PropertiesHelper {
+class PropertiesHelper(ctx: Context) {
 
-    private lateinit var server: String
-    private lateinit var folder: String
-    private lateinit var user: String
-    private lateinit var pass: String
-    private lateinit var domain: String
+    lateinit var server: String
+    lateinit var folder: String
+    lateinit var user: String
+    lateinit var pass: String
+    lateinit var domain: String
 
-    constructor(ctx: Context) {
+    init {
         initProperties(ctx)
     }
 
@@ -32,25 +32,5 @@ class PropertiesHelper {
         user = prop.getProperty("user")
         pass = prop.getProperty("pwd")
         domain = prop.getProperty("domain")
-    }
-
-    fun getServer(): String {
-        return server
-    }
-
-    fun getFolder(): String{
-        return folder
-    }
-
-    fun getUser(): String{
-        return user
-    }
-
-    fun getPass(): String{
-        return pass
-    }
-
-    fun getDomain(): String{
-        return domain
     }
 }
