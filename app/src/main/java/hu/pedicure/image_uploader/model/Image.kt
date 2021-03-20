@@ -1,4 +1,4 @@
-package hu.pedicure.image_uploader
+package hu.pedicure.image_uploader.model
 
 import kotlinx.serialization.*
 

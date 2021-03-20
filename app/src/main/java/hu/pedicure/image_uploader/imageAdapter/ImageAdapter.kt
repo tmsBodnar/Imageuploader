@@ -1,4 +1,4 @@
-package hu.pedicure.image_uploader
+package hu.pedicure.image_uploader.imageAdapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,8 +9,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.squareup.picasso.Picasso
-import hu.pedicure.image_uploader.ImageAdapter.*
-import java.lang.ref.WeakReference
+import hu.pedicure.image_uploader.model.Image
+import hu.pedicure.image_uploader.R
+import hu.pedicure.image_uploader.imageAdapter.ImageAdapter.*
 
 class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>(){
 
