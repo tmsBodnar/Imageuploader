@@ -70,14 +70,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun start() {
+    fun start(view: View) {
         loadButton.visibility = View.GONE
         loadImages()
         recView.visibility = View.VISIBLE
         fab.visibility = View.VISIBLE
     }
 
-    fun addNewImage() {
+    fun addNewImage(view:
+                    View) {
         val photoPickerIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         photoPickerIntent.type = "image/*"
         photoPickerIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

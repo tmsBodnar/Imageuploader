@@ -41,7 +41,8 @@ class FTPHelper(private var ctx: Context) {
         val inputStream = FileInputStream(this.ctx.filesDir.path + "/images.json")
         var res =  client.storeFile("$folder/images.json", inputStream)
         inputStream.close()
-        val resizedImageUri = imageFormatter.formatImageToWeb(selectedPhotoUri, this.ctx)
+        val file = imageFormatter.formatImageToWeb(selectedPhotoUri, this.ctx)
+        val resizedImageUri = Uri.parse(file.path)
         if (type == Type.NEW) {
             val imageInputStream = ctx.contentResolver.openInputStream(resizedImageUri)
             res = client.storeFile("pedicure_hu" + image.source, imageInputStream)
@@ -50,6 +51,7 @@ class FTPHelper(private var ctx: Context) {
         if (res) {
             client.disconnect()
         }
+        file.delete()
         return res
     }
     fun deleteFromFtp(image: Image): Boolean {
