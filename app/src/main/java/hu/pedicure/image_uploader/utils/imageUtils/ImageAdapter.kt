@@ -1,4 +1,4 @@
-package hu.pedicure.image_uploader.imageHelpers
+package hu.pedicure.image_uploader.utils.imageUtils
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.squareup.picasso.Picasso
 import hu.pedicure.image_uploader.R
-import hu.pedicure.image_uploader.imageHelpers.ImageAdapter.ViewHolder
+import hu.pedicure.image_uploader.utils.imageUtils.ImageAdapter.ViewHolder
 import hu.pedicure.image_uploader.model.Image
-import hu.pedicure.image_uploader.propertiesHelper.PropertiesHelper
+import hu.pedicure.image_uploader.utils.propertiesUtil.PropertiesInitializer
 
 class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>(){
 
@@ -21,7 +21,7 @@ class ImageAdapter(private val dataSet: MutableList<Image>): Adapter<ViewHolder>
     var onItemClickEdit: ((Image) -> Unit)? = null
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view){
-        private val propHelper = PropertiesHelper(view.context)
+        private val propHelper = PropertiesInitializer(view.context)
         val domain: String = propHelper.domain
         val alt: TextView = view.findViewById(R.id.alt)
         val title: TextView = view.findViewById(R.id.title)

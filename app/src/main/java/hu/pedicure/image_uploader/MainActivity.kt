@@ -13,12 +13,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.squareup.picasso.Picasso
-import hu.pedicure.image_uploader.ftpHelper.FTPHelper
-import hu.pedicure.image_uploader.imageHelpers.ImageAdapter
-import hu.pedicure.image_uploader.imageHelpers.ImageDetailsListHelper
+import hu.pedicure.image_uploader.utils.ftpUtil.FTPUtil
+import hu.pedicure.image_uploader.utils.imageUtils.ImageAdapter
+import hu.pedicure.image_uploader.utils.imageUtils.JSONImageDetailsUtil
 import hu.pedicure.image_uploader.model.Image
 import hu.pedicure.image_uploader.model.Type
-import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -26,16 +25,16 @@ import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var ftpHelper: FTPHelper
+    private lateinit var ftpUtil: FTPUtil
 
     private lateinit var recView: RecyclerView
-    private lateinit var pBar: ProgressBar
     private lateinit var fab: FloatingActionButton
     private lateinit var etTitle: EditText
     private lateinit var etAlt : EditText
     private lateinit var dialogImg: ImageView
     private lateinit var imgName: EditText
     private lateinit var  loadButton: Button
+
 
     private lateinit var selectedPhotoUri: Uri
 
@@ -48,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         recView = findViewById(R.id.rec_view)
-        pBar = findViewById(R.id.progress_circular)
         fab = findViewById(R.id.fab)
         loadButton = findViewById(R.id.btn_load)
         linearLayoutManager = LinearLayoutManager(this)
@@ -66,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         fab.visibility = View.GONE
         loadButton.visibility = View.VISIBLE
 
-        ftpHelper =FTPHelper(this)
+        ftpUtil =FTPUtil(this)
     }
 
 
@@ -77,8 +75,7 @@ class MainActivity : AppCompatActivity() {
         fab.visibility = View.VISIBLE
     }
 
-    fun addNewImage(view:
-                    View) {
+    fun addNewImage(view: View) {
         val photoPickerIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         photoPickerIntent.type = "image/*"
         photoPickerIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -93,10 +90,10 @@ class MainActivity : AppCompatActivity() {
         val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle(R.string.delete)
         dialogBuilder.setMessage(R.string.confirm)
-        dialogBuilder.setPositiveButton(R.string.OK) { _,_ ->
+        dialogBuilder.setPositiveButton(R.string.OK) { _, _ ->
             updateOrDeleteImage(Type.DELETE, image)
         }
-        dialogBuilder.setNegativeButton(R.string.cancel) { _,_->
+        dialogBuilder.setNegativeButton(R.string.cancel) { _, _->
 
         }
         dialogBuilder.show()
@@ -143,10 +140,10 @@ class MainActivity : AppCompatActivity() {
                 throw Exception("No type!")
             }
         }
-        dialogBuilder.setPositiveButton(R.string.OK) { _,_ ->
+        dialogBuilder.setPositiveButton(R.string.OK) { _, _ ->
             updateOrDeleteImage(type, image)
-        }
-        dialogBuilder.setNegativeButton(R.string.cancel) { _,_->
+            }
+        dialogBuilder.setNegativeButton(R.string.cancel) { _, _->
 
         }
         dialogBuilder.show()
@@ -154,7 +151,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateOrDeleteImage(type: Type, image: Image) {
         imageList.remove(image)
-        var done = false
+        val done: Boolean
         when (type){
             Type.UPDATE, Type.NEW -> {
 
@@ -165,19 +162,14 @@ class MainActivity : AppCompatActivity() {
                 if (type == Type.NEW) {
                     val ext = mime.getExtensionFromMimeType(contentResolver.getType(selectedPhotoUri))
                     val lastItemSource = imageList[imageList.size - 1]
-                    val count = if (lastItemSource.seq > 0)  imageList.size else lastItemSource.seq + 1
+                    val count = if (lastItemSource.seq > 0) imageList.size else lastItemSource.seq + 1
                     image.source = PRE_SOURCE_TEXT + count + "_" + imgName.text.toString() + "." + ext
                 }
                 imageList.add(image)
                 val updatedJson = Json.encodeToString(imageList)
                 val localFile = File(filesDir.path + "/images.json")
                 localFile.writeText(updatedJson)
-                val job = GlobalScope.launch {
-                    done = withContext(Dispatchers.Default) { ftpHelper.saveOrUpdateFtp(type, image, selectedPhotoUri) }
-                }
-                runBlocking {
-                    job.join()
-                }
+                done = ftpUtil.saveOrUpdateFtp(type, image, selectedPhotoUri)
                 if (done) {
                     loadImages()
                 } else {
@@ -185,16 +177,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             Type.DELETE -> {
-
                 val updatedJson = Json.encodeToString(imageList)
                 val localFile = File(filesDir.path + "/images.json")
                 localFile.writeText(updatedJson)
-                val job = GlobalScope.launch {
-                    done = withContext(Dispatchers.Default) { ftpHelper.deleteFromFtp(image) }
-                }
-                runBlocking {
-                    job.join()
-                }
+                done = ftpUtil.deleteFromFtp(image)
                 if (done) {
                     loadImages()
                 } else {
@@ -207,9 +193,9 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun loadImages() {
-        val imageDetailsListHelper = ImageDetailsListHelper()
+        val imageDetailsListHelper = JSONImageDetailsUtil()
         imageList.clear()
-        imageList.addAll(imageDetailsListHelper.loadImages(ftpHelper.getJSONFile()))
+        imageList.addAll(imageDetailsListHelper.loadImages(ftpUtil.getJSONFile()))
         imageList.reverse()
         imageAdapter.notifyDataSetChanged()
     }

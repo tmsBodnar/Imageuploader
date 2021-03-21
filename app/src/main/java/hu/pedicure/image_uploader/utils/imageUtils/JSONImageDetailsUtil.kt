@@ -1,4 +1,4 @@
-package hu.pedicure.image_uploader.imageHelpers
+package hu.pedicure.image_uploader.utils.imageUtils
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -7,7 +7,7 @@ import hu.pedicure.image_uploader.model.Image
 import java.io.File
 import java.nio.charset.Charset
 
-class ImageDetailsListHelper() {
+class JSONImageDetailsUtil() {
 
     private var mapper: JsonMapper = JsonMapper()
 

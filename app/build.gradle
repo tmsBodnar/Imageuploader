@@ -9,7 +9,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "hu.pedicu.image_uploader"
+        applicationId "hu.pedicure.image_uploader"
         minSdkVersion 28
         targetSdkVersion 30
         versionCode 1

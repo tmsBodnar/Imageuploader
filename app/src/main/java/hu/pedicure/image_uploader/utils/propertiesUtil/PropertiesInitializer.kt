@@ -1,10 +1,10 @@
-package hu.pedicure.image_uploader.propertiesHelper
+package hu.pedicure.image_uploader.utils.propertiesUtil
 
 import android.content.Context
 import java.io.InputStream
 import java.util.*
 
-class PropertiesHelper(ctx: Context) {
+class PropertiesInitializer(ctx: Context) {
 
     lateinit var server: String
     lateinit var folder: String
