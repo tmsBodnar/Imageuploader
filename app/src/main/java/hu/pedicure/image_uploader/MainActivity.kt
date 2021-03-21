@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dialogImg: ImageView
     private lateinit var imgName: EditText
     private lateinit var  loadButton: Button
+    private lateinit var progressCircle: ProgressBar
 
 
     private lateinit var selectedPhotoUri: Uri
@@ -45,6 +46,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        progressCircle = findViewById(R.id.loading_spinner)
+        progressCircle.visibility =View.GONE
 
         recView = findViewById(R.id.rec_view)
         fab = findViewById(R.id.fab)

@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import hu.pedicure.image_uploader.utils.imageUtils.ImageResizing
 import hu.pedicure.image_uploader.model.Image
@@ -42,15 +43,15 @@ class FTPUtil(private var ctx: Context) {
     }
 
     fun getJSONFile(): File{
-        val job1 = GlobalScope.launch(Dispatchers.IO) {
-            jsonFile = withContext(Dispatchers.IO) {
+        val job = GlobalScope.launch(Dispatchers.IO) {
+            val jsonFileAsync = async(Dispatchers.IO) {
                 asyncGetFTPFile()
-
             }
+            jsonFile = jsonFileAsync.await()
         }
         runBlocking {
-            job1.join()
-        }
+          job.join()
+      }
         return jsonFile
     }
 

@@ -27,8 +27,16 @@
         app:layout_constraintTop_toBottomOf="@id/header"
         android:onClick="start"
         android:text="@string/loading"/>
-
-
+    <ProgressBar
+        android:id="@+id/loading_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_load"
+        android:indeterminateTintMode="src_atop"
+        android:indeterminateTint="@color/purple_500"
+        android:layout_gravity="center" />
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rec_view"
             android:layout_width="match_parent"
